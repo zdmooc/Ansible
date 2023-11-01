@@ -1,0 +1,29 @@
+---
+- name: Playbook Install nfs client
+  hosts: almalinux
+  become: true
+  tasks:
+    - name: Installer les paquets
+      ansible.builtin.yum:
+        name:
+          - nfs-utils
+          - nfs4-acl-tools
+        state: latest
+    - name: Démarrer le service nfs
+      ansible.builtin.service:
+        name: nfs-client.target
+        state: started
+        enabled: true
+    - name: Créer le point de montage
+      ansible.builtin.file:
+        path: /mnt/share
+        state: directory
+        mode: 0777
+    - name: ajouter la ligne dans le fstab
+      ansible.posix.mount:
+        src: 192.168.25.128:/nfs-share
+        path: /mnt/share
+        opts: rw,sync
+        state: mounted
+        fstype: nfs
+      tags: mount

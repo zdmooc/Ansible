@@ -1,0 +1,48 @@
+---
+- name: Playbook d'install nfs server
+  hosts: server
+  become: true
+  tasks:
+    - name: Installation de nfs server
+      ansible.builtin.yum:
+        name: nfs-utils
+        state: latest
+    - name: Démarrer et activer le service
+      ansible.builtin.service:
+        name: nfs-server
+        state: started
+        enabled: true
+    - name: Création du Dossier de partage nfs
+      ansible.builtin.file:
+        path: /nfs-share
+        state: directory
+        mode: 0777
+    - name: ajout de la ligne des machines dans /etc/exports
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: '/nfs-share       192.168.25.129(rw,sync) 192.168.25.130(rw,sync)'
+        create: yes
+      ansible.builtin.file:
+        path: /nfs-share
+        state: directory
+        mode: 0777
+    - name: ajout de la ligne des machines dans /etc/exports
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: '/nfs-share       192.168.25.129(rw,sync) 192.168.25.130(rw,sync)'
+        create: yes
+    - name: Ouverture des ports
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      loop:
+        - nfs
+        - rpc-bind
+        - mountd
+      tags: firewalld
+    - name: Redemarrer le service nfs
+      ansible.builtin.service:
+        name: nfs-server
+        state: restarted

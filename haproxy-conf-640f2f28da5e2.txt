@@ -1,0 +1,36 @@
+global
+   log /dev/log local0
+   log /dev/log local1 notice
+   chroot /var/lib/haproxy
+   user haproxy
+   group haproxy
+   daemon
+
+defaults
+   log global
+   mode http
+   timeout connect 5000ms
+   timeout client 50000ms
+   timeout server 50000ms
+
+frontend www.wf3.fr
+   bind 192.168.25.129:80
+   acl is_wf3_fr hdr(host) -i www.wf3.fr
+   use_backend backend_wf3_fr if is_wf3_fr
+
+frontend www.wf3.com
+   bind 192.168.25.129:80
+   acl is_wf3_com hdr(host) -i www.wf3.com
+   use_backend backend_wf3_com if is_wf3_com
+
+backend backend_wf3_fr
+   mode http
+   balance roundrobin
+   option forwardfor
+   server cli-02 192.168.25.130:80
+
+backend backend_wf3_com
+   mode http
+   balance roundrobin
+   option forwardfor
+   server cli-03 192.168.25.132:80
